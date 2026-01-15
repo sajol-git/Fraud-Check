@@ -1,0 +1,5 @@
+{
+  "name": "Courier Shield",
+  "description": "A fraud detection dashboard for checking courier delivery history using Pathao and Steadfast APIs. Evaluates customer reliability based on delivery ratios.",
+  "requestFramePermissions": []
+}
