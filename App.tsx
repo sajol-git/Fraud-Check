@@ -4,7 +4,7 @@ import { checkFraud } from './services/courierApi';
 import { CustomerData, CourierName } from './types';
 import { RiskBadge } from './components/RiskBadge';
 import { CourierCard } from './components/CourierCard';
-import { Shield, TrendingUp, AlertCircle, History, Database, Wifi, WifiOff } from 'lucide-react';
+import { Shield, TrendingUp, AlertCircle, History, Wifi, WifiOff } from 'lucide-react';
 
 export default function App() {
   const [data, setData] = useState<CustomerData | null>(null);
