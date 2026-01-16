@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { SearchBar } from './components/SearchBar';
 import { checkFraud } from './services/courierApi';
 import { CustomerData, CourierName } from './types';
