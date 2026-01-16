@@ -27,14 +27,22 @@ async function fetchWithTimeout(resource: RequestInfo, options: RequestInit & { 
   }
 }
 
+// Utility to ensure phone is clean before using in fallbacks
+const cleanPhone = (phone: string) => {
+    let p = phone.replace(/\D/g, '');
+    if (p.startsWith('880')) p = p.substring(2);
+    return p;
+};
+
 export const checkFraud = async (phone: string): Promise<CustomerData> => {
+  const sanitizedPhone = cleanPhone(phone);
   try {
     // 1. Attempt to fetch from the Node.js Backend
     // Fail fast (1.5s) if backend is not running to switch to fallback quickly
     const response = await fetchWithTimeout(BACKEND_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone }),
+      body: JSON.stringify({ phone: sanitizedPhone }),
       timeout: 1500 
     });
 
@@ -46,10 +54,13 @@ export const checkFraud = async (phone: string): Promise<CustomerData> => {
       }
     }
     
-    throw new Error('Backend unavailable or returned non-JSON');
+    // If we get a 400 here, it means the Backend is up but rejected the request.
+    // However, since we sanitized the input, a 400 is unlikely unless regex mismatch.
+    // We throw to trigger fallback.
+    throw new Error(`Backend unavailable or returned error ${response.status}`);
   } catch (error) {
     console.warn("Backend check failed, switching to client-side fallback...", error);
-    return await runClientSideFallback(phone);
+    return await runClientSideFallback(sanitizedPhone);
   }
 };
 
@@ -83,6 +94,9 @@ async function runClientSideFallback(phone: string): Promise<CustomerData> {
         successRate: ratio
       };
     } else {
+        // If 404, it might mean the endpoint is wrong OR the user is not found.
+        // For now, we will throw to trigger simulation, as we cannot distinguish reliably
+        // without better documentation on the specific 404 meaning of this endpoint.
         throw new Error(`Steadfast Direct Call Failed: ${response.status}`);
     }
   } catch (err) {

@@ -11,8 +11,18 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, isLoading }) => 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (input.trim().length > 5) {
-      onSearch(input.trim());
+    
+    // Sanitize input: remove non-digits
+    const cleanNumber = input.replace(/\D/g, '');
+    
+    // Simple validation for BD numbers (check length)
+    // Allows 017... (11 digits) or 88017... (13 digits)
+    if (cleanNumber.length >= 11) {
+      // Normalize to 11 digits if it starts with 880
+      const formatted = cleanNumber.startsWith('880') ? cleanNumber.slice 
+      (2) : cleanNumber;
+      
+      onSearch(formatted);
     }
   };
 
@@ -35,7 +45,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, isLoading }) => 
       />
       <button
         type="submit"
-        disabled={isLoading || input.length < 5}
+        disabled={isLoading || input.replace(/\D/g, '').length < 11}
         className="absolute inset-y-2 right-2 px-6 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 text-white font-medium rounded-xl transition-colors shadow-sm"
       >
         Check

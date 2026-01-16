@@ -3,8 +3,23 @@ const { getSteadfastScore } = require('./steadfast');
 // BD Phone Number Validation Regex: Starts with 01, followed by 3-9, then 8 digits.
 const BD_PHONE_REGEX = /^01[3-9]\d{8}$/;
 
+const normalizePhoneNumber = (phone) => {
+  if (!phone) return '';
+  // Remove all non-digit characters
+  let cleaned = phone.toString().replace(/\D/g, '');
+  
+  // Handle 880 prefix
+  if (cleaned.startsWith('880')) {
+    cleaned = cleaned.substring(2);
+  }
+  
+  return cleaned;
+};
+
 const checkFraud = async (req, res) => {
-  const { phone } = req.body;
+  const { phone: rawPhone } = req.body;
+  
+  const phone = normalizePhoneNumber(rawPhone);
 
   // 1. Validation
   if (!phone || !BD_PHONE_REGEX.test(phone)) {
@@ -39,9 +54,9 @@ const checkFraud = async (req, res) => {
             successRate: ratio
         };
     } catch (err) {
-        console.error('Steadfast Service Failed:', err.message);
-        // We continue with empty stats if the API fails, so the app doesn't crash completely.
-        // In a production app, you might want to return an explicit error to the UI.
+        // Log but do not fail the request. Return 0 stats for Steadfast if it fails.
+        // This handles 404s (User not found) or 500s from Steadfast.
+        console.warn(`Steadfast Service Check Failed for ${phone}:`, err.message);
     }
 
     // 3. Aggregate and Risk Calculation
