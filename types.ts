@@ -16,6 +16,7 @@ export interface CustomerData {
   address?: string;
   aggregateScore: number; // 0-100, where 100 is best
   riskLevel: 'Safe' | 'Moderate' | 'High Risk' | 'Critical' | 'New User';
+  dataSource?: 'backend' | 'client-api' | 'simulation';
   couriers: {
     [CourierName.PATHAO]: CourierStats;
     [CourierName.STEADFAST]: CourierStats;

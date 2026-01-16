@@ -4,7 +4,7 @@ import { checkFraud } from './services/courierApi';
 import { CustomerData, CourierName } from './types';
 import { RiskBadge } from './components/RiskBadge';
 import { CourierCard } from './components/CourierCard';
-import { Shield, TrendingUp, AlertCircle, History } from 'lucide-react';
+import { Shield, TrendingUp, AlertCircle, History, Database, Wifi, WifiOff } from 'lucide-react';
 
 export default function App() {
   const [data, setData] = useState<CustomerData | null>(null);
@@ -101,7 +101,20 @@ export default function App() {
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
                    <div>
                        <h2 className="text-2xl font-bold text-slate-900 mb-1">Customer Analysis</h2>
-                       <p className="text-slate-500">{data.phone}</p>
+                       <div className="flex items-center mt-1 space-x-3">
+                           <p className="text-slate-500 font-mono text-lg">{data.phone}</p>
+                           
+                           {/* Data Source Badge */}
+                           {data.dataSource === 'simulation' ? (
+                               <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">
+                                   <WifiOff className="w-3 h-3 mr-1" /> Simulated Data
+                               </span>
+                           ) : (
+                               <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                   <Wifi className="w-3 h-3 mr-1" /> Live: {data.dataSource === 'backend' ? 'Server' : 'Direct API'}
+                               </span>
+                           )}
+                       </div>
                    </div>
                    <div className="mt-4 md:mt-0">
                        <RiskBadge level={data.riskLevel} />

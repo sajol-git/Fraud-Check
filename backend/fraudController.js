@@ -55,7 +55,7 @@ const checkFraud = async (req, res) => {
         };
     } catch (err) {
         // Log but do not fail the request. Return 0 stats for Steadfast if it fails.
-        // This handles 404s (User not found) or 500s from Steadfast.
+        // This handles 500s from Steadfast. 404s are handled in getSteadfastScore.
         console.warn(`Steadfast Service Check Failed for ${phone}:`, err.message);
     }
 
@@ -81,6 +81,7 @@ const checkFraud = async (req, res) => {
       address: "Address Hidden", 
       aggregateScore: Math.round(globalSuccessRate),
       riskLevel,
+      dataSource: 'backend',
       couriers: {
         'Pathao': pathaoStats,
         'Steadfast': steadfastStats

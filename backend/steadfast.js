@@ -25,6 +25,16 @@ async function getSteadfastScore(phone) {
 
     return response.data;
   } catch (error) {
+    // If user is not found (404), return empty stats. This is valid data.
+    if (error.response && error.response.status === 404) {
+        return { 
+            total_orders: 0, 
+            delivered_orders: 0, 
+            cancelled_orders: 0, 
+            delivery_ratio: 0 
+        };
+    }
+    
     console.error('Steadfast Score Error:', error.response?.data || error.message);
     throw error;
   }

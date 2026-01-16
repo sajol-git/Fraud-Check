@@ -93,10 +93,12 @@ async function runClientSideFallback(phone: string): Promise<CustomerData> {
         cancelled: total - delivered,
         successRate: ratio
       };
+    } else if (response.status === 404) {
+        // 404 means User Not Found, which is a valid result (0 parcels)
+        // Do NOT throw error here, or it will trigger simulation
+        console.info("User not found in Steadfast (404), treating as new user.");
+        steadfastStats = { totalParcels: 0, delivered: 0, cancelled: 0, successRate: 0 };
     } else {
-        // If 404, it might mean the endpoint is wrong OR the user is not found.
-        // For now, we will throw to trigger simulation, as we cannot distinguish reliably
-        // without better documentation on the specific 404 meaning of this endpoint.
         throw new Error(`Steadfast Direct Call Failed: ${response.status}`);
     }
   } catch (err) {
@@ -106,11 +108,11 @@ async function runClientSideFallback(phone: string): Promise<CustomerData> {
   }
 
   // If we got here, we have real Steadfast data but no Pathao data
-  return calculateRisk(phone, { totalParcels: 0, delivered: 0, cancelled: 0, successRate: 0 }, steadfastStats);
+  return calculateRisk(phone, { totalParcels: 0, delivered: 0, cancelled: 0, successRate: 0 }, steadfastStats, 'client-api');
 }
 
 // Helper to calculate risk
-function calculateRisk(phone: string, pathaoStats: any, steadfastStats: any): CustomerData {
+function calculateRisk(phone: string, pathaoStats: any, steadfastStats: any, source: 'backend' | 'client-api' | 'simulation' = 'backend'): CustomerData {
   const totalDelivered = pathaoStats.delivered + steadfastStats.delivered;
   const totalParcels = pathaoStats.totalParcels + steadfastStats.totalParcels;
   const globalSuccessRate = totalParcels > 0 ? (totalDelivered / totalParcels) * 100 : 0;
@@ -123,10 +125,11 @@ function calculateRisk(phone: string, pathaoStats: any, steadfastStats: any): Cu
 
   return {
     phone,
-    name: "Customer (Fallback)",
-    address: "Address Hidden (Client-Side)",
+    name: "Customer",
+    address: "Address Hidden",
     aggregateScore: Math.round(globalSuccessRate),
     riskLevel,
+    dataSource: source,
     couriers: {
       [CourierName.PATHAO]: pathaoStats,
       [CourierName.STEADFAST]: steadfastStats
@@ -143,7 +146,8 @@ function generateSimulationData(phone: string): CustomerData {
   if (lastDigit === 0) {
      return calculateRisk(phone, 
         { totalParcels: 0, delivered: 0, cancelled: 0, successRate: 0 },
-        { totalParcels: 0, delivered: 0, cancelled: 0, successRate: 0 }
+        { totalParcels: 0, delivered: 0, cancelled: 0, successRate: 0 },
+        'simulation'
      );
   }
 
@@ -171,5 +175,5 @@ function generateSimulationData(phone: string): CustomerData {
       successRate: (sDelivered / sTotal) * 100
   };
 
-  return calculateRisk(phone, pathaoStats, steadfastStats);
+  return calculateRisk(phone, pathaoStats, steadfastStats, 'simulation');
 }
